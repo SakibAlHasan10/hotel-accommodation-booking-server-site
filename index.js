@@ -22,6 +22,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   const bookingCollection = client.db("BookingDB").collection("rooms");
+  const usersCollection = client.db("BookingDB").collection("users");
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
@@ -34,7 +35,17 @@ async function run() {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
-  // get/read
+  //   create user token 
+  app.post('/jwt', async(req, res)=>{
+
+  })
+//   post user
+app.post("/users", async(req, res)=>{
+    const user = req.body
+    const result = await usersCollection.insertOne(user)
+    res.send(result)
+})
+  // get/read room
   // Single rooms
   app.get("/rooms/:id", async (req, res) => {
     const id = req.params.id;
