@@ -1,16 +1,13 @@
-const express = require('express');
-const app = express()
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const cors = require('cors');
-require('dotenv').config()
+const express = require("express");
+const app = express();
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const cors = require("cors");
+require("dotenv").config();
 const port = process.env.PORT || 5000;
 
-
 // middleware
-// 9NL5DStGumHsrI33
-// BookingDB
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 const uri = process.env.SECRET_URI;
 
@@ -20,26 +17,48 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
+  const bookingCollection = client.db("BookingDB").collection("rooms");
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
+  // get/read
+  // Single rooms
+  app.get("/rooms/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await bookingCollection.findOne(query);
+    // console.log(id);
+    res.send(result);
+  });
+  //all rooms
+  app.get("/rooms", async (req, res) => {
+    try {
+      const query = bookingCollection.find();
+      const result = await query.toArray();
+      res.send(result);
+    } catch (error) {
+      console.log(error);
+    }
+  });
 }
 run().catch(console.dir);
 
-app.get('/', async(req, res)=>{
-    res.send('booking is running...')
-})
-app.listen(port, ()=>{
-    console.log(`Booking app running is port ${port}`)
-})
+app.get("/", async (req, res) => {
+  res.send("booking is running...");
+});
+app.listen(port, () => {
+  console.log(`Booking app running is port ${port}`);
+});
