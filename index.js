@@ -46,6 +46,7 @@ async function run() {
   const roomCollection = client.db("BookingDB").collection("rooms");
   const usersCollection = client.db("BookingDB").collection("users");
   const bookCollection = client.db("BookingDB").collection("bookings");
+  const reviewsCollection = client.db("BookingDB").collection("reviews");
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -77,6 +78,18 @@ async function run() {
   app.post("/logout", async (req, res) => {
     const user = req.body;
     res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+  });
+
+  // post review
+  app.post("/reviews", async (req, res) => {
+    try {
+      const review = req.body;
+      const result = await reviewsCollection.insertOne(review);
+      // console.log(review)
+      res.send(result);
+    } catch (error) {
+      console.log(error);
+    }
   });
 
   // my booking room
@@ -120,6 +133,7 @@ async function run() {
       const email = query.email;
       // booking information
       const data = {
+        id: query.bookingSum.id,
         title: query.bookingSum.title,
         bookDate,
         email,
