@@ -68,15 +68,16 @@ async function run() {
           httpOnly: true,
           secure: false,
         })
-        .send(token);
+        .send({ success: true });
     } catch (error) {
       res.send(error);
     }
   });
   // logout
-  // app.post('/logout', async(req, res)=>{
-
-  // })
+  app.post("/logout", async (req, res) => {
+    const user = req.body;
+    res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+  });
 
   // my booking room
   app.get("/books/:id", secretRouter, async (req, res) => {
