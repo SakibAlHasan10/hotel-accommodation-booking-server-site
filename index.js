@@ -32,7 +32,7 @@ const client = new MongoClient(uri, {
 //     console.log(req.h)
 // }
 async function run() {
-  const bookingCollection = client.db("BookingDB").collection("rooms");
+  const roomCollection = client.db("BookingDB").collection("rooms");
   const usersCollection = client.db("BookingDB").collection("users");
   const bookCollection = client.db("BookingDB").collection("bookings");
   try {
@@ -63,16 +63,29 @@ async function run() {
     }
   });
   // user book room
-  app.get('/books/:id', async(req, res)=>{
-    try{
-      const email = {email:req.params.id};
-      const query= bookingCollection.find(email)
-      const result = await query.toArray()
-      res.send(result)
-    }catch(error){
-      res.send(error)
+  app.get("/books/:id", async (req, res) => {
+    try {
+      const email = { email: req.params.id };
+      const query = bookCollection.find(email);
+      const result = await query.toArray();
+      res.send(result);
+    } catch (error) {
+      res.send(error);
     }
-  })
+  });
+  // remove book room
+  app.delete("/remove/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await bookCollection.deleteOne(filter);
+      console.log(id);
+      res.send(result);
+    } catch (error) {
+      res.send(error);
+    }
+  });
+
   // booking
   app.patch("/bookings", async (req, res) => {
     try {
@@ -82,16 +95,16 @@ async function run() {
         startDate: query.bookingSum.startDate,
         endDate: query.bookingSum.endDate,
       };
-      const email =query.email ;
+      const email = query.email;
       // booking information
-      // const data = {
-      //   title: query.title,
-      //   date,
-      //   price: query.price,
-      //   size: query.size,
-      //   description: query.description,
-      //   img: query.img,
-      // };
+      const data = {
+        title: query.bookingSum.title,
+        bookDate,
+        email,
+        price: query.bookingSum.price,
+        size: query.bookingSum.size,
+        img: query.bookingSum.img,
+      };
       // room id
       const id = req.body.bookingSum.id;
       const find = { _id: new ObjectId(id) };
@@ -102,9 +115,9 @@ async function run() {
           email,
         },
       };
-      const options = { upsert: true };
-      const roomBook = await bookingCollection.updateOne(find, UpdateDoc, );
-      // const book = await bookCollection.insertOne(query);
+      // const options = { upsert: true };
+      const roomBook = await roomCollection.updateOne(find, UpdateDoc);
+      const book = await bookCollection.insertOne(data);
       // console.log(UpdateDoc, id);
       res.send(roomBook);
     } catch (error) {
@@ -127,7 +140,7 @@ async function run() {
     try {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await bookingCollection.findOne(query);
+      const result = await roomCollection.findOne(query);
       // console.log(id);
       res.send(result);
     } catch (error) {
@@ -137,7 +150,7 @@ async function run() {
   //all rooms
   app.get("/rooms", async (req, res) => {
     try {
-      const query = bookingCollection.find();
+      const query = roomCollection.find();
       const result = await query.toArray();
       res.send(result);
     } catch (error) {
