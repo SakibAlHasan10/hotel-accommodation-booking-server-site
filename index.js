@@ -37,12 +37,12 @@ async function run() {
   const bookCollection = client.db("BookingDB").collection("bookings");
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -62,16 +62,27 @@ async function run() {
       console.log(error);
     }
   });
+  // user book room
+  app.get('/books/:id', async(req, res)=>{
+    try{
+      const email = {email:req.params.id};
+      const query= bookingCollection.find(email)
+      const result = await query.toArray()
+      res.send(result)
+    }catch(error){
+      res.send(error)
+    }
+  })
   // booking
   app.patch("/bookings", async (req, res) => {
     try {
       const query = req.body;
       // booking date
       const bookDate = {
-        startDate: query.bookingSum.endDate,
+        startDate: query.bookingSum.startDate,
         endDate: query.bookingSum.endDate,
       };
-      const email = { email: query.email };
+      const email =query.email ;
       // booking information
       // const data = {
       //   title: query.title,
@@ -91,10 +102,10 @@ async function run() {
           email,
         },
       };
-      // const options = { upsert: true };
-      const roomBook = await bookingCollection.updateOne(find, UpdateDoc);
+      const options = { upsert: true };
+      const roomBook = await bookingCollection.updateOne(find, UpdateDoc, );
       // const book = await bookCollection.insertOne(query);
-      console.log(UpdateDoc, id);
+      // console.log(UpdateDoc, id);
       res.send(roomBook);
     } catch (error) {
       res.send(error);
