@@ -28,9 +28,20 @@ const client = new MongoClient(uri, {
   },
 });
 // create middleware for token
-// const secretRouter = async(req, res, next){
-//     console.log(req.h)
-// }
+const secretRouter = async (req, res, next) => {
+  // console.log(req.cookies?.token)
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "not authorized" });
+  }
+  jwt.verify(token, process.env.SECRET_TK, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 async function run() {
   const roomCollection = client.db("BookingDB").collection("rooms");
   const usersCollection = client.db("BookingDB").collection("users");
@@ -47,7 +58,7 @@ async function run() {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
-  //   create user token
+  //   create jwt token
   app.post("/jwt", async (req, res) => {
     try {
       const user = req.body;
@@ -59,13 +70,22 @@ async function run() {
         })
         .send(token);
     } catch (error) {
-      console.log(error);
+      res.send(error);
     }
   });
-  // user book room
-  app.get("/books/:id", async (req, res) => {
+  // logout
+  // app.post('/logout', async(req, res)=>{
+
+  // })
+
+  // my booking room
+  app.get("/books/:id", secretRouter, async (req, res) => {
     try {
+      // console.log(req.user.email)
       const email = { email: req.params.id };
+      if (req.params.id !== req.user.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
       const query = bookCollection.find(email);
       const result = await query.toArray();
       res.send(result);
@@ -73,13 +93,14 @@ async function run() {
       res.send(error);
     }
   });
+
   // remove book room
   app.delete("/remove/:id", async (req, res) => {
     try {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const result = await bookCollection.deleteOne(filter);
-      console.log(id);
+      // console.log(id);
       res.send(result);
     } catch (error) {
       res.send(error);
@@ -124,6 +145,8 @@ async function run() {
       res.send(error);
     }
   });
+
+  // user
   //   post user
   app.post("/users", async (req, res) => {
     try {
@@ -134,6 +157,7 @@ async function run() {
       console.log(error);
     }
   });
+
   // get/read room
   // Single rooms
   app.get("/rooms/:id", async (req, res) => {
