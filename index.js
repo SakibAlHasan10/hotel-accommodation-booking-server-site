@@ -80,26 +80,26 @@ async function run() {
     res.clearCookie("token", { maxAge: 0 }).send({ success: true });
   });
   // get  all review per room
-  app.get('/reviews/:id', async(req, res)=>{
-    try{
-      const query ={id: req.params.id}
-      const filter = reviewsCollection.find(query)
-      const result = await filter.toArray()
-      res.send(result)
-    }catch(error){
-      res.send(error)
+  app.get("/reviews/:id", async (req, res) => {
+    try {
+      const query = { id: req.params.id };
+      const filter = reviewsCollection.find(query);
+      const result = await filter.toArray();
+      res.send(result);
+    } catch (error) {
+      res.send(error);
     }
-  })
+  });
   // get  all review
-  app.get('/reviews', async(req, res)=>{
-    try{
-      const query =reviewsCollection.find()
-      const result = await query.toArray()
-      res.send(result)
-    }catch(error){
-      res.send(error)
+  app.get("/reviews", async (req, res) => {
+    try {
+      const query = reviewsCollection.find();
+      const result = await query.toArray();
+      res.send(result);
+    } catch (error) {
+      res.send(error);
     }
-  })
+  });
   // post review
   app.post("/reviews", async (req, res) => {
     try {
@@ -146,15 +146,14 @@ async function run() {
     try {
       const query = req.body;
       // booking date
-      const bookDate = {
-        startDate: query.bookingSum.startDate
-      };
+      const booking = query.bookingSum.booking;
       const email = query.email;
+      const sit = query.bookingSum.sit - 1;
       // booking information
       const data = {
         id: query.bookingSum.id,
         title: query.bookingSum.title,
-        bookDate,
+        booking,
         email,
         price: query.bookingSum.price,
         size: query.bookingSum.size,
@@ -166,15 +165,15 @@ async function run() {
       // booking date
       const UpdateDoc = {
         $set: {
-          bookDate,
-          email,
+          booking,
+          sit,
         },
       };
+      // console.log(UpdateDoc)
       // const options = { upsert: true };
       const roomBook = await roomCollection.updateOne(find, UpdateDoc);
       const book = await bookCollection.insertOne(data);
-      // console.log(UpdateDoc, id);
-      res.send(roomBook);
+      res.send({ roomBook, book });
     } catch (error) {
       res.send(error);
     }
@@ -208,14 +207,13 @@ async function run() {
   // http://localhost:5000/rooms?shortField=PricePerNight&shortOrder=asc/desc
   //all rooms
   app.get("/rooms", async (req, res) => {
-    
     try {
-      let shortObj = {}
+      let shortObj = {};
 
-      const shortField = req.query.shortField
-      const shortOrder = req.query.shortOrder
-      if(shortField&&shortOrder){
-        shortObj[shortField]=shortOrder
+      const shortField = req.query.shortField;
+      const shortOrder = req.query.shortOrder;
+      if (shortField && shortOrder) {
+        shortObj[shortField] = shortOrder;
       }
       const query = roomCollection.find().sort(shortObj);
       const result = await query.toArray();
