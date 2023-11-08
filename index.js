@@ -79,7 +79,27 @@ async function run() {
     const user = req.body;
     res.clearCookie("token", { maxAge: 0 }).send({ success: true });
   });
-
+  // get  all review per room
+  app.get('/reviews/:id', async(req, res)=>{
+    try{
+      const query ={id: req.params.id}
+      const filter = reviewsCollection.find(query)
+      const result = await filter.toArray()
+      res.send(result)
+    }catch(error){
+      res.send(error)
+    }
+  })
+  // get  all review
+  app.get('/reviews', async(req, res)=>{
+    try{
+      const query =reviewsCollection.find()
+      const result = await query.toArray()
+      res.send(result)
+    }catch(error){
+      res.send(error)
+    }
+  })
   // post review
   app.post("/reviews", async (req, res) => {
     try {
@@ -127,8 +147,7 @@ async function run() {
       const query = req.body;
       // booking date
       const bookDate = {
-        startDate: query.bookingSum.startDate,
-        endDate: query.bookingSum.endDate,
+        startDate: query.bookingSum.startDate
       };
       const email = query.email;
       // booking information
@@ -186,10 +205,19 @@ async function run() {
       console.log(error);
     }
   });
+  // http://localhost:5000/rooms?shortField=PricePerNight&shortOrder=asc/desc
   //all rooms
   app.get("/rooms", async (req, res) => {
+    
     try {
-      const query = roomCollection.find();
+      let shortObj = {}
+
+      const shortField = req.query.shortField
+      const shortOrder = req.query.shortOrder
+      if(shortField&&shortOrder){
+        shortObj[shortField]=shortOrder
+      }
+      const query = roomCollection.find().sort(shortObj);
       const result = await query.toArray();
       res.send(result);
     } catch (error) {
