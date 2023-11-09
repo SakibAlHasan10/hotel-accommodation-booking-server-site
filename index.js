@@ -67,7 +67,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
     } catch (error) {
@@ -77,7 +78,11 @@ async function run() {
   // logout
   app.post("/logout", async (req, res) => {
     const user = req.body;
-    res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    res.clearCookie("token", {
+      maxAge: 0,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
   });
   // get  all review per room
   app.get("/reviews/:id", async (req, res) => {
@@ -111,7 +116,28 @@ async function run() {
       console.log(error);
     }
   });
-
+  // get single booking item
+  app.get("/v1/books/:id", async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const result = await bookCollection.findOne(filter);
+    // console.log(result)
+    res.send(result);
+  });
+  // update booking date
+  app.patch("/update/:id", async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const booking = req.body;
+    const updateDoc = {
+      $set: {
+        booking,
+      },
+    };
+    const result = await bookCollection.updateOne(filter, updateDoc);
+    console.log(id, booking, updateDoc);
+    res.send(result);
+  });
   // my booking room
   app.get("/books/:id", secretRouter, async (req, res) => {
     try {
