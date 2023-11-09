@@ -118,25 +118,33 @@ async function run() {
   });
   // get single booking item
   app.get("/v1/books/:id", async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const result = await bookCollection.findOne(filter);
-    // console.log(result)
-    res.send(result);
+    try {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await bookCollection.findOne(filter);
+      // console.log(result)
+      res.send(result);
+    } catch (error) {
+      res.send(error);
+    }
   });
   // update booking date
   app.patch("/update/:id", async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const booking = req.body;
-    const updateDoc = {
-      $set: {
-        booking,
-      },
-    };
-    const result = await bookCollection.updateOne(filter, updateDoc);
-    console.log(id, booking, updateDoc);
-    res.send(result);
+    try {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const booking = req.body;
+      const updateDoc = {
+        $set: {
+          booking,
+        },
+      };
+      const result = await bookCollection.updateOne(filter, updateDoc);
+      // console.log(id, booking, updateDoc);
+      res.send(result);
+    } catch (error) {
+      res.send(error);
+    }
   });
   // my booking room
   app.get("/books/:id", secretRouter, async (req, res) => {
